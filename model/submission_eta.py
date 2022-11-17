@@ -58,7 +58,7 @@ def speed_to_eta(pred_data, BASEDIR, city):
     return eta_df
 
 BASEDIR = load_basedir(fn="t4c22_config.json", pkg=t4c22)
-submission_name_input = "data/submissions/GNN_result_eta/" 
+submission_name_input = "../data/submissions/GNN_result_eta/" 
 submission_name_ouput = "GNNv10_merge_all_eta"
 cities = ["london","melbourne","madrid"]
 (BASEDIR / "submissions" / submission_name_ouput ).mkdir(exist_ok=True, parents=True)

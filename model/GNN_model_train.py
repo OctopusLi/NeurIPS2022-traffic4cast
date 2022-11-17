@@ -1,3 +1,13 @@
+#  Copyright 2022 Institute of Advanced Research in Artificial Intelligence (IARAI) GmbH.
+#  IARAI licenses this file to You under the Apache License, Version 2.0
+#  (the "License"); you may not use this file except in compliance with
+#  the License. You may obtain a copy of the License at
+#  http://www.apache.org/licenses/LICENSE-2.0
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
 import os
 import sys
 sys.path.insert(0, os.path.abspath("../"))
@@ -20,7 +30,7 @@ from t4c22.metric.masked_crossentropy import get_weights_from_class_fractions
 from t4c22.misc.t4c22_logging import t4c_apply_basic_logging_config
 from t4c22.t4c22_config import class_fractions
 from t4c22.t4c22_config import load_basedir
-from t4c22.dataloading.t4c22_dataset_cc_nol import T4c22Dataset
+from t4c22.dataloading.t4c22_dataset import T4c22Dataset
 from t4c22.plotting.plot_congestion_classification import plot_segment_classifications_simple
 from t4c22.misc.notebook_helpers import restartkernel  # noqa:F401
 import torch
@@ -227,7 +237,8 @@ def train(model, dataset, optimizer, batch_size, device):
         loss2 = loss_f1(pred_cc.reshape(-1,3),data["y"].reshape(-1))
         loss3 = loss_f2(pred_vol.reshape(-1,3),data["volcc_output"].reshape(-1))
 
-        loss = 0.03*loss1 + loss2 + loss3
+        loss = loss2 
+        # loss = 0.03*loss1 + loss2
 
         loss.backward()
 
@@ -239,7 +250,7 @@ def train(model, dataset, optimizer, batch_size, device):
         losses3 += loss3.cpu().item()
     lens = len(dataset) // batch_size
     print("train_loss:{:.5f} loss_cc: {:.5f} loss_speed: {:.5f} loss_vol:{:.5f}\n".format(losses/lens,losses2/lens,losses1/lens,losses3/lens))
-    return losses
+    return losses/lens
 
 
 @torch.no_grad()
@@ -270,9 +281,9 @@ def vaild(model, validation_dataset, batch_size, device):
         loss2 = loss_f1(pred_cc.reshape(-1,3),data["y"].reshape(-1))
         loss3 = loss_f2(pred_vol.reshape(-1,3),data["volcc_output"].reshape(-1))
 
-        loss = 0.03*loss1 + loss2 + loss3
+        loss = loss2 
+        # loss = 0.03*loss1 + loss2 
 
-        loss = 0.03*loss1 + loss2 + loss3
         losses += loss.cpu().item()
         losses1 += loss1.cpu().item()
         losses2 += loss2.cpu().item()
@@ -281,7 +292,7 @@ def vaild(model, validation_dataset, batch_size, device):
 
     lens = len(validation_dataset)//batch_size
     print("valid_loss:{:.5f} loss_cc: {:.5f} loss_speed: {:.5f} loss_vol:{:.5f}\n".format(losses/lens,losses2/lens,losses1/lens,losses3/lens))
-
+    return losses/lens 
 @torch.no_grad()
 def test(model, test_dataset, batch_size, device):
     dfs = []
@@ -307,17 +318,17 @@ if __name__ == "__main__":
     BASEDIR = load_basedir(fn="t4c22_config.json", pkg=t4c22)
     split = "train"
 
-    model_save_dir = Path("checkpoints")
+    model_save_dir = Path("../checkpoints")
     model_save_dir.mkdir(exist_ok=True, parents=True)
 
-    cities = ["london","madrid","melbourne"]
+    cities = ["madrid","melbourne","london"]
     vaild_scores = {}
     city_attrs ={"london":{"nodes":59110,"edges":132414,"counters":3751,"volcc_fractions":[0.29,0.22,0.49]},
                     "madrid":{"nodes":63397,"edges":121902,"counters":3875,"volcc_fractions":[0.150,0.155,0.695]},
                     "melbourne":{"nodes":49510,"edges":94871,"counters":3982,"volcc_fractions":[0.495,0.215,0.290]},}
     for city  in cities:
         vaild_score = []
-        dataset = T4c22Dataset(root=BASEDIR, city=city, split=split, cachedir=Path("data/tmp"))
+        dataset = T4c22Dataset(root=BASEDIR, city=city, split=split, cachedir=Path("../data/tmp"))
         spl = int(((0.8 * len(dataset)) // 2) * 2)
         train_dataset, val_dataset = torch.utils.data.random_split(dataset, [spl, len(dataset) - spl])
         
@@ -360,7 +371,7 @@ if __name__ == "__main__":
         train_losses = defaultdict(lambda: [])
         val_losses = defaultdict(lambda: -1)
 
-        new_edge_index  = np.load("data/road_graph/{}/new_edge_index.npy".format(city))
+        new_edge_index  = np.load("../data/road_graph/{}/new_edge_index.npy".format(city))
         new_edge_index = torch.tensor(new_edge_index, dtype=torch.long)
         edge_indexs = []
         for i in range(batch_size):
@@ -389,12 +400,13 @@ if __name__ == "__main__":
 
                     val_loss = vaild(model,  validation_dataset=val_dataset, batch_size=batch_size, device=device)
                     val_losses[(run, epoch)] = val_loss
+                    print(val_loss, best_score)
                     if val_loss < best_score:
                         best_score = val_loss
                         torch.save(model.state_dict(), model_save_dir/"GNN_model_{}_{}.pt".format(city,run))
                     print(f"{city}  val_loss={val_loss} after epoch {epoch} of run {run} best_score={best_score}")
 
-        vaild_scores[city] = vaild_score 
+        vaild_scores[city] = best_score 
         print(vaild_score)
     print(vaild_scores)
  

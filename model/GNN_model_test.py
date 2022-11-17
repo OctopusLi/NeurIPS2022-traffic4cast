@@ -1,3 +1,13 @@
+#  Copyright 2022 Institute of Advanced Research in Artificial Intelligence (IARAI) GmbH.
+#  IARAI licenses this file to You under the Apache License, Version 2.0
+#  (the "License"); you may not use this file except in compliance with
+#  the License. You may obtain a copy of the License at
+#  http://www.apache.org/licenses/LICENSE-2.0
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
 import os
 import sys
 sys.path.insert(0, os.path.abspath("../"))
@@ -20,7 +30,7 @@ from t4c22.metric.masked_crossentropy import get_weights_from_class_fractions
 from t4c22.misc.t4c22_logging import t4c_apply_basic_logging_config
 from t4c22.t4c22_config import class_fractions
 from t4c22.t4c22_config import load_basedir
-from t4c22.dataloading.t4c22_dataset_cc_nol import T4c22Dataset
+from t4c22.dataloading.t4c22_dataset import T4c22Dataset
 from t4c22.plotting.plot_congestion_classification import plot_segment_classifications_simple
 from t4c22.misc.notebook_helpers import restartkernel  # noqa:F401
 import torch
@@ -346,7 +356,7 @@ if __name__ == "__main__":
     split = "test"
     competition = "cc"
     # competition = "eta"
-    model_save_dir = Path("checkpoints")
+    model_save_dir = Path("../checkpoints")
     model_save_dir.mkdir(exist_ok=True, parents=True)
     submission_name = "GNN_result_"+competition
     cities = ["london","melbourne","madrid"]
@@ -362,7 +372,7 @@ if __name__ == "__main__":
 
     for city  in cities:
 
-        test_dataset = T4c22Dataset(root=BASEDIR, city=city, split=split, cachedir=Path("data/tmp"))
+        test_dataset = T4c22Dataset(root=BASEDIR, city=city, split=split, cachedir=Path("../data/tmp"))
         city_attr = city_attrs[city]
         
         city_class_fractions = class_fractions[city]
@@ -372,7 +382,7 @@ if __name__ == "__main__":
         batch_size = 1
         eval_steps = 1
         epochs = 20
-        runs = 10
+        runs = 9
         dropout = 0.05
         num_edge_classes = 7
         num_node_features = 4
@@ -391,7 +401,7 @@ if __name__ == "__main__":
         train_losses = defaultdict(lambda: [])
         val_losses = defaultdict(lambda: -1)
 
-        new_edge_index  = np.load("data/road_graph/{}/new_edge_index.npy".format(city))
+        new_edge_index  = np.load("../data/road_graph/{}/new_edge_index.npy".format(city))
         new_edge_index = torch.tensor(new_edge_index, dtype=torch.long)
         edge_indexs = []
         for i in range(batch_size):
@@ -400,7 +410,7 @@ if __name__ == "__main__":
         new_edge_index  = torch.cat(edge_indexs,dim=-1)
         new_edge_index = new_edge_index.to(device)
 
-        model_files = sorted(glob(f"{model_save_name}/*{city}*"))
+        model_files = sorted(glob(f"{model_save_dir}/*{city}*"))
         
         print(city, len(model_files))
 

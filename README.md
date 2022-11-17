@@ -1,6 +1,6 @@
 # Traffic4cast2022
 ## Data Preparation
-After downloading the data (see [Download Links](#download-links)), run
+After downloading the [data] (https://github.com/iarai/NeurIPS2022-traffic4cast)) and [checkpoints](https://drive.google.com/drive/folders/1-iqirakUhSjWoiKy-MRY5eRGPswE6F9-), run
 ```bash
 prepare_training_data_cc.py -d <data folder with unzipped downloads>
 prepare_training_data_eta.py -d <data folder with unzipped downloads>
@@ -21,7 +21,4 @@ python submission_eta.py
 ```
 
 ### Acknowledgements
-This repository is based on NeurIPS2022-traffic4cast from the Institute of Advanced Research in Artificial Intelligence (IARAI).
-
-If you find this repository useful, please considering citing:
-
+This repository is based on [NeurIPS2022-Traffic4cast](https://github.com/iarai/NeurIPS2022-traffic4cast) from the Institute of Advanced Research in Artificial Intelligence (IARAI).

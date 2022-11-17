@@ -13,7 +13,7 @@ import zipfile
 
 
 BASEDIR = load_basedir(fn="t4c22_config.json", pkg=t4c22)
-submission_name_input = "data/submission/GNN_result_cc/"
+submission_name_input = "../data/submission/GNN_result_cc/"
 submission_name_ouput = "ensemble_cc_result"
 
 cities = ["london","melbourne","madrid"]

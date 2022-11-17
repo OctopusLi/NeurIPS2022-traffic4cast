@@ -1,4 +1,5 @@
-
+import torch
+from torch import nn
 
 
 def weight_init(m):
